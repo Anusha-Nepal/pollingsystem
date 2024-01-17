@@ -5,50 +5,72 @@ namespace App\Http\Controllers;
 use App\Models\Choice;
 use App\Models\Poll;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class PollController extends Controller
 {
     public function index()
     {
-        $polls = Poll::all();
+        $polls = Poll::paginate(10);
         return view('poll.index', compact('polls'));
     }
 
     public function create()
     {
-        // Show the form to create a new poll
         return view('poll.create');
     }
 
  
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'choices' => 'required|string',
-        ]);
+{
+    $currentDate = now();
 
-        $poll = auth()->user()->polls()->create([
-            'title' => $request->input('title'),
-            'description' => $request->input('description'),
-        ]);
-        
-      
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'choices' => 'required|array',
+        'choices.*' => 'distinct|string',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after:start_date',
+    ]);
 
-        $choices = explode("\n", $request->input('choices'));
-        foreach ($choices as $choiceText) {
-            $choice = new Choice(['text' => trim($choiceText)]);
-            $poll->choices()->save($choice);
-        }
+    $start_date_with_time = Carbon::parse($request->input('start_date'))->toDateTimeString();
+    $end_date_with_time = Carbon::parse($request->input('end_date'))->toDateTimeString();
 
-        return redirect()->route('poll.index')->with('success', 'Poll created successfully!');
+    // Check if the start date is in the past
+    if ($currentDate > $start_date_with_time) {
+        return redirect()->route('poll.index')->with('error', 'Poll start date has passed. Cannot create poll.');
     }
+
+    // Create poll data
+    $pollData = [
+        'title' => $request->input('title'),
+        'description' => $request->input('description'),
+        'choices' => $request->input('choices'),
+        'start_date_with_time' => $start_date_with_time, 
+        'end_date_with_time' => $end_date_with_time,
+    ];
+   
+
+   
+    $poll = auth()->user()->polls()->create($pollData);
+
+    foreach ($request->input('choices') as $choiceText) {
+        $choice = new Choice(['text' => trim($choiceText)]);
+        $poll->choices()->save($choice);
+    }
+
+    return redirect()->route('poll.index')->with('success', 'Poll created successfully!');
+}
+
+    
+
 
     public function show($id)
     {
+        
         $poll = Poll::findOrFail($id);
         $votes = $poll->votes()->count();
     
@@ -57,38 +79,85 @@ class PollController extends Controller
     
 
 
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-    ]);
-
-    $poll = Poll::findOrFail($id);
-    $poll->update([
-        'title' => $request->input('title'),
-        'description' => $request->input('description'),
-    ]);
-
+    public function update(Request $request, $id)
+    {
+        $input = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
     
-    return redirect()->route('poll.index')->with('success', 'Poll updated successfully!');
-}
-public function delete($id)
+        $poll = Poll::findOrFail($id);
+    
+        
+        if ($poll->user_id == auth()->user()->id) {
+            $poll->update([
+                'title' => $input['title'],
+                'description' => $input['description'],
+            ]);
+    
+            return redirect()->route('poll.index')->with('success', 'Poll updated successfully!');
+        } else {
+            
+            return redirect()->route('poll.index')->with('error', 'You are not authorized to update this poll.');
+        }
+    }
+    
+ public function delete(Request $request, $pollId)
 {
-    $poll = Poll::findOrFail($id);
 
-    $poll->votes()->delete();
+    $poll = Poll::findOrFail($pollId);
+
+ 
+    if ($request->user()->id !== $poll->user_id) {
+        return redirect()->route('dashboard')->with('error', 'You are not authorized to delete this poll.');
+    }
+
     $poll->delete();
 
-    return redirect()->route('poll.index')->with('success', 'Poll deleted successfully!');
+    return redirect()->route('dashboard')->with('success', 'Poll deleted successfully.');
 }
 
-
-    public function edit($id)
+    public function edit(Request $request, $pollId)
 {
-    // Retrieve the poll by ID and pass it to the view
-    $poll = Poll::findOrFail($id);
+    $poll = Poll::findOrFail($pollId);
+    if ($request->user()->id !== $poll->user_id) {
+        return redirect()->route('dashboard')->with('error', 'You are not authorized to edit this poll.');
+    }
     return view('poll.edit', compact('poll'));
 }
 
+
+
+public function search(Request $request)
+{
+    $pollName = $request->input('poll_name');
+    $creatorName = $request->input('creator_name');
+    $startDate = $request->input('start_date');
+    $endDate = $request->input('end_date');
+    $search = $request->input('search');
+
+    $query = Poll::query();
+
+    if ($pollName) {
+        $query->where('title', 'like', '%' . $pollName . '%');
+    }
+
+    if ($creatorName) {
+        $query->whereHas('user', function ($userQuery) use ($creatorName) {
+            $userQuery->where('name', 'like', '%' . $creatorName . '%');
+        });
+    }
+
+    if ($startDate && $endDate) {
+        $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    $polls = $query->paginate(10);
+
+    return view('poll.index', compact('polls'));
 }
+
+}
+
+
+

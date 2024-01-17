@@ -15,9 +15,10 @@ class VerificationController extends Controller
             $user = $verification->user;
             $user->is_email_verified = true;
             $user->save();
-            return redirect(route('login.form'))->with('message', 'Email verified successfully. You can now log in.');
+            return redirect(route('auth.login'))->with('message', 'Email verified successfully. You can now log in.');
+
         }
 
-        return redirect(route('login.form'))->with('message', 'Invalid verification token.');
+        return redirect(route('auth.register'))->with('message', 'Invalid verification token.');
     }
 }

@@ -1,50 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
 
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">{{ __('Dashboard') }}</div>
-@csrf
-                    <div class="card-body">
-                        <h5>Welcome, {{ Auth::user()->name }}!</h5>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>user dashboard</title>
+    <h1>Welcome to the Polling App</h1>
 
-                        <div class="mb-3">
-                            <h6>Create a New Poll:</h6>
-                            <form method="POST" action="{{ route('poll.create') }}">
-                                @csrf
-                                <label for="poll-title">Poll Title:</label>
-                                <input type="text" id="poll-title" name="title" required>
-                                <button type="submit" class="btn btn-primary">Create Poll</button>
-                            </form>
-                        </div>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
 
-                        
+        .container {
+            margin-top: 50px;
+        }
 
-                     
-                        <div class="mb-3">
-                            <h6>Your Polls:</h6>
-                            <ul>
-                                @foreach($userPolls as $poll)
-                                    <li>{{ $poll->title }} - <a href="{{ route('poll.show', $poll->id) }}">View</a> | <a href="{{ route('poll.edit', $poll->id) }}">Edit</a> | <a href="{{ route('poll.delete', $poll->id) }}">Delete</a></li>
-                                @endforeach
-                            </ul>
-                        </div>
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
 
-                       
-                        <div class="mb-3">
-                            <h6>Your Voting History:</h6>
-                            <ul>
-                                @foreach($votingHistory as $vote)
-                                    <li>You voted on the poll "{{ $vote->poll->title }}" - <a href="{{ route('poll.show', $vote->poll->id) }}">Details</a></li>
-                                @endforeach
-                            </ul>
-                        </div>
-                        <form method="POST" action="{{ route('logout') }}" class="mt-3">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">Logout</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        /* Navigation bar styles */
+        .navbar {
+            background-color: #007bff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <h5>Welcome, {{ Auth::user()->name }}!</h5>
+</head>
+
+<body>
+    @if(Session::has('error'))
+<p >{{ Session::get('error') }}</p>
+@endif
+    <div class="navbar">
+        <a href="#">Home</a>
+        <a href="{{ route('poll.create') }}">Create Poll</a>
+        
+       <a href ="{{route('poll.index')}}"> Polls</a>
+
+       {{-- <a href="{{ route('dashboard.voted-polls') }}">Voted Polls</a> --}}
+
+        <form method="POST" action="{{ route('logout') }}" style="display: inline-block;">
+            @csrf
+            <button type="submit" class="btn btn-danger">Logout</button>
+        </form>
     </div>
+                                            
+                                            
+</div>
+ </div>
+</div>
+</body>
+
+</html>
+
+    
+
+    

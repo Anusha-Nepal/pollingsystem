@@ -2,29 +2,71 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Models\Choice;
 use App\Models\Poll;
 use App\Models\Vote;
 use Illuminate\Http\Request;
-
+use Carbon\Carbon;
 class VoteController extends Controller
 {
-    public function vote(Request $request, $pollId)
+    public function showVoteForm($pollId)
     {
+        
         $poll = Poll::findOrFail($pollId);
+        $choices = Choice::where('polls_id', $pollId)->get(); 
 
-        // Check if the user has already voted on this poll
-        if ($poll->votes()->where('user_id', auth()->id())->exists()) {
+        
+        $userHasVoted = Vote::where('user_id', auth()->id())->where('polls_id', $pollId)->exists(); 
+
+       
+        return view('poll.vote', compact('poll', 'choices', 'userHasVoted'));
+    }
+
+    public function submitVote(Request $request, $pollId)
+    {
+       $poll = Poll::findOrFail($pollId);
+        $userHasVoted = Vote::where('user_id', auth()->id())->where('polls_id', $pollId)->exists();
+       
+        if ($userHasVoted) {
             return redirect()->route('poll.index')->with('error', 'You have already voted on this poll.');
         }
+        if ($poll->end_date_with_time <= Carbon::now('Asia/Kathmandu')) {
+            return redirect()->route('poll.index')->with('error', 'This poll has already expired. You cannot vote on it anymore.');
+        }
 
-        // Create a new vote for the authenticated user
-        Vote::create([
-            'user_id' => auth()->id(),
-            'poll_id' => $poll->id,
-        ]);
+        $vote = new Vote();
+        $vote->user_id = auth()->id();
+        $vote->polls_id = $pollId;
+        $vote->choice_id = $request->input('choice');
+        $vote->save();
 
-        return redirect()->route('poll.index')->with('success', 'Vote submitted successfully!');
+        return redirect()->route('poll.index')->with('success', 'Vote submitted successfully.');
     }
-}
+    public function showAllPollResults()
+    {
+        $polls = Poll::all();
+    
+        $allResults = [];
+    
+        
+        foreach ($polls as $poll) {
+            
+            $votes = Vote::where('polls_id', $poll->id)->get();
+    
+           
+            $choices = Choice::where('polls_id', $poll->id)->get();
+    
+            
+            $allResults[] = [
+                'poll' => $poll,
+                'votes' => $votes,
+                'choices' => $choices, 
+            ];
+        }
+    
+        return view('poll.results', ['allResults' => $allResults]);
+    }
+    
 
+
+}

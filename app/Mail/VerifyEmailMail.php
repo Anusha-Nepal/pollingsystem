@@ -13,24 +13,21 @@ class VerifyEmailMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $user;
+    public $token;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($user, $token)
     {
-        //
+        $this->user = $user;
+        $this->token = $token;
     }
 
     /**
      * Get the message envelope.
      */
-    public function build()
-{
-    return $this->view('emails.verify-email')
-                ->with([
-                    'verificationLink' => route('verify.email', ['token' => $this->Verification->token]),
-                ]);
-}
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -44,7 +41,7 @@ class VerifyEmailMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'auth.verifyemail',
         );
     }
 
@@ -57,4 +54,5 @@ class VerifyEmailMail extends Mailable
     {
         return [];
     }
+
 }

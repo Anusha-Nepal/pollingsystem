@@ -1,7 +1,4 @@
 <?php
-
-
-
 namespace App\Http\Controllers;
 
 use App\Models\Poll;
@@ -18,14 +15,20 @@ class DashboardController extends Controller
     
         return view('dashboard', compact('userPolls', 'votingHistory'));
     }
-
-    public function showDashboard()
+    public function votedPolls()
 {
-   
-    $userPolls = Poll::where('user_id', Auth::id())->get();
-    $votingHistory = Vote::where('user_id', Auth::id())->with('poll')->get();
-
-    return view('dashboard', compact('userPolls', 'votingHistory'));
+    $user = Auth::user();
+    $votedPolls = $user->votes()->with('poll')->get();
+    return view('poll.show', compact('votedPolls'));
 }
+//     public function showDashboard()
+// {
+   
+//     $userPolls = Poll::where('user_id', Auth::id())->get();
+//     $votingHistory = Vote::where('user_id', Auth::id())->with('poll')->get();
+
+//     return view('dashboard', compact('userPolls', 'votingHistory'));
+// }
+
 
 }

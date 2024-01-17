@@ -25,21 +25,35 @@ class ChoiceController extends Controller
 
     
     public function store(Request $request, $pollId)
-    {
-        $request->validate([
-            'text' => 'required|string|max:255',
-        ]);
+{
+    $request->validate([
+        'text' => [
+            'required',
+            'string',
+            'max:255',
+            'unique:choices,text,NULL,id,poll_id,' . $pollId,
+        ],
+    ], [
+        'text.unique' => 'Please enter a unique choice.',
+    ]);
+    
 
-        $poll = Poll::findOrFail($pollId);
+    $poll = Poll::findOrFail($pollId);
 
-        $choice = new Choice([
-            'text' => $request->input('text'),
-        ]);
-
-        $poll->choices()->save($choice);
-
-        return redirect()->route('poll.show', $poll->id)->with('success', 'Choice added successfully!');
+    // Check if the previous choice exists
+    if ($poll->choices->count() >= 2 && empty($request->input('text'))) {
+        return redirect()->route('poll.show', $poll->id)->withErrors(['text' => 'Please enter the second choice before adding the third one.'])->withInput();
     }
+
+    $choice = new Choice([
+        'text' => $request->input('text'),
+    ]);
+
+    $poll->choices()->save($choice);
+
+    return redirect()->route('poll.show', $poll->id)->with('success', 'Choice added successfully!');
+}
+
 }
  
 

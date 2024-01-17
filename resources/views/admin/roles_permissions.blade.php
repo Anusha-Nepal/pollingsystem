@@ -1,0 +1,35 @@
+
+<div class="card mt-4">
+    <div class="card-header">
+        Managing Roles and Permissions
+    </div>
+    <div class="card-body">
+        <h5>Manage Roles:</h5>
+
+        <!-- Example: View Roles -->
+        <a href="{{ route('admin.view_roles') }}" class="btn btn-primary">View Roles</a>
+
+        <!-- Example: Create Role -->
+        <form action="{{ route('admin.create_role') }}" method="post" class="mt-2">
+            @csrf
+            <label for="role_name">Create New Role:</label>
+            <input type="text" name="role_name" id="role_name" class="form-control" required>
+            <button type="submit" class="btn btn-success">Create Role</button>
+        </form>
+
+        <hr>
+
+        <h5>Manage Permissions:</h5>
+
+        <!-- Example: View Permissions -->
+        <a href="{{ route('admin.view_permissions') }}" class="btn btn-primary">View Permissions</a>
+
+        {{-- <!-- Example: Create Permission -->
+        <form action="{{ route('admin.create_permission') }}" method="post" class="mt-2">
+            @csrf
+            <label for="permission_name">Create New Permission:</label>
+            <input type="text" name="permission_name" id="permission_name" class="form-control" required>
+            <button type="submit" class="btn btn-success">Create Permission</button>
+        </form> --}}
+    </div>
+</div>
