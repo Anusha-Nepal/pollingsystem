@@ -141,9 +141,9 @@
         <h2>List of Polls</h2>
 
         <ul>
-            @foreach($polls as $poll)
+            @foreach($polls as $key=>$poll)
                 <div>
-                    Created by: {{ $poll->user->name ?? 'Unknown Creator' }}
+                   {{++$key}}.Created by: {{ $poll->user->name ?? 'Unknown Creator' }}
                 </div>
                 <li>
                     <div>
