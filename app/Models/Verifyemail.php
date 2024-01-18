@@ -11,9 +11,6 @@ class Verifyemail extends Model
 {
     use HasFactory,Notifiable;
     protected $table = "verify_emails";
-
-   
-
     protected $fillable = [
         'token','user_id',
         
