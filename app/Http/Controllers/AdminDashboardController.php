@@ -22,62 +22,67 @@ class AdminDashboardController extends Controller
         
         return view('admin.dashboard', compact('totalUsers', 'totalPolls', 'users', 'roles','permissions', 'polls'));
     }
-    
-    // public function deleteUser($userId)
-    // {
-    //     $user = User::find($userId);
-    
-    //     if (!$user) {
-    //         return redirect()->route('admin.dashboard')->with('error', 'User not found.');
-    //     }
-    
-    //     $user->choices()->delete();
-    
-      
-    //     $user->votes()->delete();
-    
-    
-    //     $user->delete();
-    
-    //     return redirect()->route('admin.dashboard')->with('success', 'User deleted successfully.');
-    // }
-    
-    
     public function assignRoles(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'role_id' => 'required|exists:roles,id',
-        ]);
+        
+        $roles=Roles::all();
+        $permissions=Permission::all();
+        $users=User::all();
+        if ($request->isMethod('post')) {
+            $request->validate([
+                'user_id' => 'required|exists:users,id', 
+                'role_id' => 'required|exists:roles,id', 
+            ]);
+    
 
-
-        $user = User::find($request->input('user_id'));
-        $role = Roles::find($request->input('role_id'));
-
-        $user->roles()->attach($role);
-
-        return redirect()->back()->with('success', 'Role assigned successfully.');
+            $user = User::findOrFail($request->input('user_id'));
+            $role = Roles::findOrFail($request->input('role_id'));
+  
+            $user->roles()->sync($role);
+            return redirect()->back()->with('success', 'Role assigned successfully');
+        }
+    
+        return view('admin.users_roles',['roles'=>$roles,'permissions'=>$permissions,'users'=>$users]);
     }
+    
     public function assignPermission(Request $request)
     {
+       $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'permission_id' => 'required|exists:permissions,id',
+        ]);
+
+       
+         $role = Roles::find($request->input('role_id'));
+        $role->permissions()->sync([$request->input('permission_id')]);
+        return view('admin.roles_permissions');
+    
+    }
+    public function viewAssignPermission(Request $request)
+{
+    dd('hello');
+    $roles = Roles::all();
+    $permissions = Permission::all();
+ 
+
+    if ($request->isMethod('post')) {
         $request->validate([
             'role_id' => 'required|exists:roles,id',
             'permission_id' => 'required|exists:permissions,id',
         ]);
-    
-        $role = Roles::find($request->input('role_id'));
-        $permission = Permission::find($request->input('permission_id'));
-    
-        // $role->permissions()->attach($permission);
-    
-        // return redirect()->back()->with('success', 'Permission assigned successfully.');
-        if (!$role->permissions->contains($permission->id)) {
-            $role->permissions()->attach($permission);
-            return redirect()->route('admin.dashboard')->with('success', 'Permission assigned successfully.');
-        } else {
-            return redirect()->route('admin.dashboard')->with('error', 'Permission is already assigned to this role.');
-        }
+
+        $permission = Permission::findOrFail($request->input('permission_id'));
+        $role = Roles::findOrFail($request->input('role_id'));
+        
+
+        $role->permissions()->sync($permission);
+
+        return redirect()->back()->with('success', 'permission assigned successfully');
     }
+
+    return view('admin.users_roles', ['roles' => $roles, 'permissions' => $permissions]);
+}
+
     public function viewRoles()
     {
     
@@ -106,29 +111,11 @@ class AdminDashboardController extends Controller
 }
 
 
-    // public function createPermission(Request $request)
-    // {
-      
-    //     $data=$request->validate([
-    //         'permission_name' => ['required','unique:permissions,route_name'],
-          
-    //     ]);
-    //   $array= explode('.',$data['permission_name']);
-    
-    //     Permission::create([
-    //         'route_name'=>$data['permission_name'],
-    //         'common_name'=>$array[1],
-    //         'group_name'=>$array[0],        
-    //     ]);
    
-
-    //     return redirect()->route('admin.view_permissions')->with('success', 'Permission created successfully.');
-    // }
-    
     public function logout()
     {
         Auth::logout(); 
         return redirect('/login');
-//     }
+
 }
 }

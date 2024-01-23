@@ -80,27 +80,40 @@ class PollController extends Controller
 
 
     public function update(Request $request, $id)
-    {
+{
+    $poll = Poll::findOrFail($id);
+
+    if ($this->canEditPoll($poll)) {
         $input = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
-    
-        $poll = Poll::findOrFail($id);
-    
-        
-        if ($poll->user_id == auth()->user()->id) {
-            $poll->update([
-                'title' => $input['title'],
-                'description' => $input['description'],
-            ]);
-    
-            return redirect()->route('poll.index')->with('success', 'Poll updated successfully!');
-        } else {
-            
-            return redirect()->route('poll.index')->with('error', 'You are not authorized to update this poll.');
+
+        $currentDate = now();
+        $end_date_with_time = Carbon::parse($poll->end_date_with_time);
+
+        if ($currentDate > $end_date_with_time) {
+            return redirect()->route('poll.index')->with('error', 'Poll start date has passed. Cannot update poll.');
         }
+
+        $poll->update([
+            'title' => $input['title'],
+            'description' => $input['description'],
+        ]);
+
+
+        return redirect()->route('poll.index')->with('success', 'Poll updated successfully!');
+    } else {
+        return redirect()->route('poll.index')->with('error', 'You are not authorized to update this poll.');
     }
+}
+
+
+private function canEditPoll($poll)
+{
+    return $poll->user_id == auth()->user()->id;
+}
+
     
  public function delete(Request $request, $pollId)
 {

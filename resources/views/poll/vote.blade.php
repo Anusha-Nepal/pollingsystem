@@ -1,7 +1,7 @@
 
 <html>
     <head>
-        <!-- Add the existing styles -->
+     
         <style>
             .container {
                 max-width: 600px;

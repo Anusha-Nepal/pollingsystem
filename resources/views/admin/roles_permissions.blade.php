@@ -19,17 +19,8 @@
 
         <hr>
 
-        <h5>Manage Permissions:</h5>
-
-        <!-- Example: View Permissions -->
         <a href="{{ route('admin.view_permissions') }}" class="btn btn-primary">View Permissions</a>
 
-        {{-- <!-- Example: Create Permission -->
-        <form action="{{ route('admin.create_permission') }}" method="post" class="mt-2">
-            @csrf
-            <label for="permission_name">Create New Permission:</label>
-            <input type="text" name="permission_name" id="permission_name" class="form-control" required>
-            <button type="submit" class="btn btn-success">Create Permission</button>
-        </form> --}}
+       
     </div>
 </div>

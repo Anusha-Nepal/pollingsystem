@@ -53,11 +53,16 @@ Route::delete('/poll/{id}', [PollController::class, 'delete'])->name('poll.delet
 
 Route::get('/polls/{id}/edit', [PollController::class, 'edit'])->name('poll.edit')->middleware('auth');
 
-Route::get('/poll/{pollId}/vote', [VoteController::class, 'showVoteForm'])->name('vote.form')->middleware('auth');;
-Route::post('/poll/{pollId}/vote', [VoteController::class, 'submitVote'])->name('vote.submit')->middleware('auth');;
-Route::get('/admin/poll/{id}/results', [VoteController::class, 'showAllPollResults'])->middleware('auth');;
+Route::get('/poll/{pollId}/vote', [VoteController::class, 'showVoteForm'])->name('vote.form')->middleware('auth');
+Route::post('/poll/{pollId}/vote', [VoteController::class, 'submitVote'])->name('vote.submit')->middleware('auth');
+Route::get('/admin/roles-permission', [AdminDashboardController::class,'assignPermission'])->name('admin.roles_permission');
+Route::get('poll/results', [VoteController::class,'showAllPollResults'])->name('poll.results');
+ Route::get('/export-poll-results', [VoteController::class, 'export'])->name('export.poll.results');
+ Route::get('/poll/pie_chart_results', [VoteController::class ,'pieChartResults'])->name('poll.pie_chart_results');
 
-Route::get('/admin/poll/{pollId}/results', 'PollController@results')->name('admin.poll.results')->middleware('auth');;
+
+
+Route::get('/export', [VoteController::class, 'export'])->name('export');
 
 Route::post('/polls/{id}/choices/store', [ChoiceController::class, 'store'])->name('choice.store')->middleware('auth');
 
@@ -74,25 +79,21 @@ Route::get('/dashboard/voted-polls', [DashboardController::class, 'votedPolls'])
 
 Route::middleware(['auth','admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    
-
-    // Route::delete('/admin/delete/user/{userId}', [AdminDashboardController::class, 'deleteUser'])->name('admin.delete.user');
-    
     Route::post('/admin/roles/create', [AdminDashboardController::class, 'createRole'])->name('admin.create_role');
-   Route::get('/admin/view_roles', [AdminDashboardController::class,'viewRoles'])->name('admin.view_roles');
-    Route::get('/admin/permissions', 'AdminDashboardController@viewPermissions')->name('admin.view_permissions')->middleware(['auth', 'admin']);
-    // Route::delete('/admin/delete-user/{user}', 'AdminController@deleteUser')->name('admin.deleteUser');
-    // Route::delete('/admin/delete-poll/{poll}', 'AdminController@deletePoll')->name('admin.deletePoll');
-    Route::get('/admin/permissions', [AdminDashboardController::class, 'viewPermissions'])->name('admin.view_permissions');
-    Route::post('/admin/permissions/create', [AdminDashboardController::class, 'createPermission'])->name('admin.create_permission');
+    Route::get('/admin/view_roles', [AdminDashboardController::class,'viewRoles'])->name('admin.view_roles');
+    Route::get('/admin/permissions', [AdminDashboardController::class,'viewPermissions'])->name('admin.view_permissions');
+    Route::match(['get', 'post'], '/admin/roles-permissions', [AdminDashboardController::class,'viewAssignPermission'])->name('admin.users_roles');
+    Route::match(['get', 'post'],'/admin/users_roles', [AdminDashboardController::class, 'assignRoles'])->name('admin.users_roles');
     Route::post('/admin/assign_roles', [AdminDashboardController::class, 'assignRoles'])->name('admin.assign_roles');
-    Route::get('/admin/roles-permissions', [AdminDashboardController::class])->name('admin.roles_permissions');
-    Route::get('/admin/users_roles', [AdminDashboardController::class])->name('admin.users_roles');
-Route::post('/admin/assign_permission', [AdminDashboardController::class,'assignPermission'])->name('admin.assign_permission');
+
+Route::post('admin/user_roles', [AdminDashboardController::class ,'assignRoles'])->name('admin.user_roles');
+Route::post('admin/assign_permission', [AdminDashboardController::class,'assignPermission'])->name('admin.assign_permission');
 
     Route::get('/logout', [AdminDashboardController::class, 'logout'])->name('admin.logout');
- });
+});
 
+
+Route::get('users/export/', [VoteController::class, 'export']);
 use App\Http\Controllers\RoleController;
 
 Route::post('/roles', [RoleController::class, 'createRole']);

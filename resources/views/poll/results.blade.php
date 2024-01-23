@@ -18,6 +18,23 @@
             color: #666;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #3490dc;
+            color: #fff;
+        }
+
         ul {
             list-style-type: none;
             padding: 0;
@@ -45,81 +62,66 @@
         .btn:hover {
             background-color: #2779bd;
         }
-
-
-        .chart-container {
-            width: 200px;
-            height: 200px; }
     </style>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-    @foreach($allResults as $result)
-    <h1>Results for {{ $result['poll']->question }}</h1>
+    @foreach($allResults as $key=>$result)
+    <h1>{{++$key}}. Results for {{ $result['poll']->title }}</h1>
 
-    <p>{{ $result['poll']->description }}</p>
+    <p>Description:{{ $result['poll']->description }}</p>
 
-    <div class="chart-container">
-        <canvas id="chart-{{ $result['poll']->id }}"></canvas>
-    </div>
-
-    <ul>
-        @foreach($result['choices'] as $choice)
-        <li>
-            {{ $choice->text }}: {{ $result['votes']->where('choice_id', $choice->id)->count() }} votes
-            @if($result['votes']->where('choice_id', $choice->id)->count() > 0)
-            <ul>
-                @foreach($result['votes']->where('choice_id', $choice->id) as $vote)
-                <li>
-                    @if($vote->voter)
-                        {{ $vote->voter->name }} voted
-                    @endif
-
-                    <ul>
-                        <li>{{ $vote->user->name }} ({{ $vote->user->email }})</li>
-                    </ul>
-                </li>
-                @endforeach
-            </ul>
-            @endif
-        </li>
-        @endforeach
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Choice</th>
+                <th>Votes</th>
+                <th>Voters</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($result['choices'] as $choice)
+            <tr>
+                <td>{{ $choice->text }}</td>
+                <td>{{ $result['votes']->where('choice_id', $choice->id)->count() }}</td>
+                <td>
+                    @foreach($result['votes']->where('choice_id', $choice->id) as $vote)
+                    <li>
+                        @if($vote->voter)
+                            {{ $vote->voter->name }} 
+                        @endif
+                            {{ $vote->user->name }} ({{ $vote->user->email }})
+                    </li>
+                    @endforeach
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 
     @endforeach
-
+    <a href="{{ route('export') }}" class="btn btn-primary">download the excel file</a>
     <a href="{{ route('admin.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+    <a href="{{ route('poll.pie_chart_results') }}" class="btn btn-primary">reports</a>
 
-    <script>
- 
-        @foreach($allResults as $result)
-        var ctx = document.getElementById('chart-{{ $result['poll']->id }}').getContext('2d');
-        var data = {
-            labels: @json($result['choices']->pluck('text')),
-            datasets: [{
-                data: @json($result['choices']->map(function($choice) use($result) {
-                    return $result['votes']->where('choice_id', $choice->id)->count();
-                })),
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)',
-                    'rgba(255, 159, 64, 0.7)',
-                ],
-            }],
-        };
-        var myPieChart = new Chart(ctx, {
-            type: 'pie',
-            data: data,
-        });
-        @endforeach
-    </script>
-
+    {{-- <div class="pagination">
+        @if ( $allResults->onFirstPage())
+            <span>&laquo; Previous</span>
+        @else
+            <a href="{{ $allResults->previousPageUrl() }}" rel="prev">&laquo; Previous</a>
+        @endif
+    
+        @if ($allResults->hasMorePages())
+            <a href="{{ $allResults->nextPageUrl() }}" rel="next">Next &raquo;</a>
+        @else
+            <span>Next &raquo;</span>
+        @endif
+    --}}
+    {{-- <div class="mt-4">
+        {{ $allResults->links('pagination::simple-bootstrap-4') }}
+    </div> --}}
+    </div>
 </body>
 
 </html>

@@ -7,6 +7,8 @@ use App\Models\Poll;
 use App\Models\Vote;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
 class VoteController extends Controller
 {
     public function showVoteForm($pollId)
@@ -66,7 +68,40 @@ class VoteController extends Controller
     
         return view('poll.results', ['allResults' => $allResults]);
     }
+    public function pieChartResults()
+{
+    $allResults = $this->getAllPollResults();
+
+    return view('poll.pie_chart_results', ['allResults' => $allResults]);
+}
+
+    public function showExportView()
+    {
+        return view('export');
+    }
+    public function export()
+    {
+        $allResults = $this->getAllPollResults();
     
-
-
+        return Excel::download(new UsersExport($allResults), 'poll_results.xlsx');
+    }
+    
+    protected function getAllPollResults()
+    {
+        $polls = Poll::all();
+        $allResults = [];
+    
+        foreach ($polls as $poll) {
+            $votes = Vote::where('polls_id', $poll->id)->get();
+            $choices = Choice::where('polls_id', $poll->id)->get();
+    
+            $allResults[] = [
+                'poll' => $poll,
+                'votes' => $votes,
+                'choices' => $choices,
+            ];
+        }
+    
+        return $allResults;
+    }
 }
